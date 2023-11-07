@@ -1,12 +1,29 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import "./index.css";
-import App from "./App";
-
+// import "./index.css";
+// import App from "./App";
+import StarRating from "./StarRating";
+import PropTypes from "prop-types";
+StarRating.proptypes = {
+  maxRating: PropTypes.number,
+  size: PropTypes.string,
+  color: PropTypes.string,
+  defaultRating: PropTypes.number,
+  messages: PropTypes.string,
+  onSetRating: PropTypes.func,
+  className: PropTypes.string,
+};
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>
-    <App />
+    {/* <App /> */}
+    <StarRating
+      maxRating={10}
+      size="15px"
+      color={"darkblue"}
+      defaultRating={3}
+    />
+    <StarRating maxRating={8} size="20px" color="orange" defaultRating={5} />
   </React.StrictMode>
 );
 
