@@ -15,6 +15,7 @@ function StarRating({
   const textStyle = { lineHeight: "1", margin: "0" };
   const handleRating = (i) => {
     setRating(i + 1);
+    onSetRating(rating);
   };
   function onHoverIn(i) {
     setTempRating(i + 1);
