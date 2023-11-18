@@ -364,6 +364,24 @@ function MovieDetails({ selectedId, onCloseMovie, handleAddMovie, watched }) {
     },
     [onCloseMovie]
   );
+  useEffect(
+    function () {
+      // if (isWatched || !userRating) return;
+      if (userRating === 0) return;
+
+      function callback(e) {
+        if (e.code === "Enter") {
+          handleAdd();
+          onCloseMovie();
+        }
+      }
+      document.addEventListener("keydown", callback);
+      return function () {
+        document.removeEventListener("keydown", callback);
+      };
+    },
+    [userRating]
+  );
   return (
     <div>
       {isLoading ? (
