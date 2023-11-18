@@ -69,6 +69,10 @@ export default function App() {
   function handleCloseMovie() {
     setSelectedId(null);
   }
+  function handleDeleteMovies(id) {
+    setWatched((watched) => watched.filter((watched) => watched.imdbID !== id));
+  }
+  const controller = new AbortController();
   useEffect(
     function () {
       async function fetchData() {
@@ -76,7 +80,8 @@ export default function App() {
           setIsLoading(true);
           setError("");
           const res = await fetch(
-            `http://www.omdbapi.com/?apikey=${KEY}&s=${query}`
+            `http://www.omdbapi.com/?apikey=${KEY}&s=${query}`,
+            { signal: controller.signal }
           );
           if (!res.ok) {
             throw new Error("Something went wrong with fetching data");
@@ -88,7 +93,9 @@ export default function App() {
           setMovies(data.Search);
         } catch (error) {
           console.error(error.message);
-          setError(error.message);
+          if (error.name !== "AbortError") {
+            setError(error.message);
+          }
         } finally {
           setIsLoading(false);
         }
@@ -99,6 +106,9 @@ export default function App() {
         return;
       }
       fetchData();
+      return function () {
+        controller.abort();
+      };
     },
     [query]
   );
@@ -132,7 +142,10 @@ export default function App() {
           ) : (
             <>
               <WatchedSummary watched={watched} />
-              <WatchedMoviesList watched={watched} />
+              <WatchedMoviesList
+                watched={watched}
+                onDeleteMovie={handleDeleteMovies}
+              />
             </>
           )}
         </Box>
@@ -310,6 +323,9 @@ function MovieDetails({ selectedId, onCloseMovie, handleAddMovie, watched }) {
     console.log(userRating);
     handleAddMovie(newWatchedMovie);
   }
+  const watchedUserRating = watched.find(
+    (watched) => watched.imdbID === selectedId
+  )?.userRating;
   useEffect(
     function () {
       async function getMovieDetails() {
@@ -325,6 +341,28 @@ function MovieDetails({ selectedId, onCloseMovie, handleAddMovie, watched }) {
       getMovieDetails();
     },
     [selectedId]
+  );
+  useEffect(
+    function () {
+      document.title = `Movie | ${title}`;
+      return () => (document.title = "usePopcorn");
+    },
+    [title]
+  );
+  useEffect(
+    function () {
+      function callback(e) {
+        if (e.code === "Escape") {
+          onCloseMovie();
+          console.log("closed");
+        }
+      }
+      document.addEventListener("keydown", callback);
+      return function () {
+        document.removeEventListener("keydown", callback);
+      };
+    },
+    [onCloseMovie]
   );
   return (
     <div>
@@ -360,9 +398,9 @@ function MovieDetails({ selectedId, onCloseMovie, handleAddMovie, watched }) {
                   )
                 </>
               ) : (
-                <p>you rated with movie</p>
+                <p>you rated with movie {watchedUserRating}</p>
               )}
-              {userRating > 0 && (
+              {!isWatched && userRating > 0 && (
                 <button
                   className="btn-add"
                   onClick={() => {
@@ -415,17 +453,21 @@ function WatchedSummary({ watched }) {
   );
 }
 
-function WatchedMoviesList({ watched }) {
+function WatchedMoviesList({ watched, onDeleteMovie }) {
   return (
     <ul className="list">
       {watched.map((movie) => (
-        <WatchedMovie movie={movie} key={movie.imdbID} />
+        <WatchedMovie
+          movie={movie}
+          key={movie.imdbID}
+          onDeleteMovie={onDeleteMovie}
+        />
       ))}
     </ul>
   );
 }
 
-function WatchedMovie({ movie }) {
+function WatchedMovie({ movie, onDeleteMovie }) {
   return (
     <li>
       <img src={movie.poster} alt={`${movie.title} poster`} />
@@ -443,6 +485,12 @@ function WatchedMovie({ movie }) {
           <span>⏳</span>
           <span>{movie.runtime} min</span>
         </p>
+        <button
+          className="btn-delete"
+          onClick={() => onDeleteMovie(movie.imdbID)}
+        >
+          x
+        </button>
       </div>
     </li>
   );
