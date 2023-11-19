@@ -390,3 +390,8 @@ EMPTY STAR
 </svg>
 
 */
+.watched-movie:hover {
+  background-color: #adb5bd3b;
+  cursor: pointer;
+  transition: all 0.5s;
+}

@@ -112,7 +112,17 @@ export default function App() {
     },
     [query]
   );
-
+  /////////////////////////////////////////////////////
+  useEffect(function () {
+    async function fetchWeatherApi() {
+      const resp = await fetch(
+        `http://api.weatherapi.com/v1/current.json?key=a9a2f956689d4c4fb4c43322231911&q=Ethiopia&aqi=no`
+      );
+      const data = await resp.json();
+      console.log(data);
+    }
+    fetchWeatherApi();
+  }, []);
   return (
     <>
       <NavBar>
@@ -472,6 +482,24 @@ function WatchedSummary({ watched }) {
 }
 
 function WatchedMoviesList({ watched, onDeleteMovie }) {
+  const [selected, setSelected] = useState("");
+  function handleSelected(id) {
+    setSelected(id);
+    console.log(selected);
+  }
+  useEffect(
+    function () {
+      const deleteCallback = (e) => {
+        if (selected === "") return;
+        if (e.code === "Backspace") onDeleteMovie(selected);
+      };
+      document.addEventListener("keydown", deleteCallback);
+      return function () {
+        document.removeEventListener("keydown", deleteCallback);
+      };
+    },
+    [onDeleteMovie, selected]
+  );
   return (
     <ul className="list">
       {watched.map((movie) => (
@@ -479,15 +507,16 @@ function WatchedMoviesList({ watched, onDeleteMovie }) {
           movie={movie}
           key={movie.imdbID}
           onDeleteMovie={onDeleteMovie}
+          handleSelected={handleSelected}
         />
       ))}
     </ul>
   );
 }
 
-function WatchedMovie({ movie, onDeleteMovie }) {
+function WatchedMovie({ movie, onDeleteMovie, handleSelected }) {
   return (
-    <li>
+    <li className="watched-movie" onClick={() => handleSelected(movie?.imdbID)}>
       <img src={movie.poster} alt={`${movie.title} poster`} />
       <h3>{movie.title}</h3>
       <div>
